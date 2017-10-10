@@ -1,0 +1,99 @@
+\documentclass[12pt]{article}
+ \usepackage[margin=1in]{geometry} 
+\usepackage{amsmath,amsthm,amssymb,amsfonts}
+\usepackage{enumerate}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+ 
+\newenvironment{problem}[2][Problem]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}\hskip \labelsep {\bfseries #2.}]}{\end{trivlist}}
+%If you want to title your bold things something different just make another thing exactly like this but replace "problem" with the name of the thing you want, like theorem or lemma or whatever
+ 
+\begin{document}
+ 
+%\renewcommand{\qedsymbol}{\filledbox}
+%Good resources for looking up how to do stuff:
+%Binary operators: http://www.access2science.com/latex/Binary.html
+%General help: http://en.wikibooks.org/wiki/LaTeX/Mathematics
+%Or just google stuff
+ 
+\title{Project 2 - Pizza Ontology}
+\author{Ruben Polak (11389095) Krsto Prorokovic (11391839)}
+\maketitle
+ 
+\begin{problem}{0}
+Inspect the class hierarchy pizza.owl. 
+\end{problem}
+\begin{tabular}{l}
+Check.
+\end{tabular}
+ 
+\begin{problem}{1}
+Find a) which classes are inconsistent, b) ways to resolve the inconsistencies and c) save them in consistent-pizza.owl.
+\end{problem}
+
+\begin{enumerate}[a)]
+\item There are two classes inconsistent; IceCream and CheeseyVegetableTopping. The reason for IceCream being inconsistent is it's relationship "hasTopping", which is limited to the domain of the Pizza class only. Hence it cannot be assigned to the IceCream class, which is a disjoint sibling of the Pizza class. \\
+The reason for CheeseyVegetableTopping being inconsistent is because it is a subclass of two disjoint classes, CheeseyPizza and VegetablePizza. There cannot exist an instance of a class with two disjoint superclasses, hence it is inconsistent.
+\item \textbf{Solving IceCream}: There are two general methods of solving this inconsistency. The first solution is to extend the domain of hasTopping to Pizza's superclass Food (and - for completeness - apply the same change to the range its inverse property, "isTopping"). This will solve the inconsistency but has the side-effect of it being applicable to all subclasses of Food, which (aside Pizza and IceCream) also contains PizzaBase and PizzaTopping. For instance, the statement PizzaTopping.hasTopping(some).PizzaTopping would now be allowed, which is undesirable. A better solution is to extend the domain of hasTopping in a tighter way, by changing the domain from Pizza to the disjunction Pizza or IceCream. \\
+
+\textbf{Solving CheeseyVegetableTopping}: There are three general methods to solve this inconsistency. Which method is to be chosen, is based on the intention of CheeseyVegetableTopping's creation. Please consider one of the two statements:
+\begin{center}\textit{"CheeseyVegetableTopping is a topping that is both a vegetable and a cheese at the same time."} \end{center}
+This implies that there exists PizzaTopping instances that are CheeseTopping and VegetableTopping at the same time. To allow for such instances to exist, we need to undo the disjoint setting for both classes.
+\begin{center}\textit{"CheeseyVegetableTopping is a topping that consists of two ingredients where one falls under CheeseTopping and the other under VegetableTopping."} \end{center} 
+This would imply that there is an ingredient that consists of cheese and vegetable at the same time; let's say peppers filled with cheese, for instance. To allow such instances to exist in the current ontology structure (whilst keeping the CheeseTopping and Vegetable topping disjoint), we would preferably change CheeseyVegetableTopping to be a sibling of CheeseTopping and VegetableTopping. and assign the following equivalence: 
+\begin{align*}
+\textmd{CheeseyVegetableTopping} &\equiv \\
+\textmd{PizzaTopping} &\cap \textmd{hasIngredient(some).CheeseTopping} \\
+&\cap \textmd{hasIngredient(some).VegetableTopping}
+\end{align*}
+Now, instances may exist that are a PizzaPopping, consisting of the conjunction of CheeseTopping and VegetableTopping. 
+If neither of these explanations are applicable, there simply exists no CheeseyVegetableTopping. Neither in a logical- nor in a practical, working ontology point of view. If this is indeed the case, we can simply delete it from the ontology.
+\item Solutions have been implemented in consistent-pizza.owl. For the IceCream class, we selected the second solution as the best option for making the class consistent. For the CheeseyVegetableTopping class, we have selected the first solution for making the class consistent. However, we have included a file consistent-pizza-alternative.owl, which proves that the second solution works just as well. 
+\end{enumerate}
+\begin{problem}{2}
+Find redundancies.
+\end{problem}
+\begin{center}
+\begin{tabular}{ | p{4cm} | p{4cm} | p{8cm} |}
+\hline
+Class & Equivalent to class & Explanation \\ \hline
+
+VegetarianPizzaEquiv2 & VegetarianPizzaEquiv1 & Pizza and hasTopping only 
+    (CheeseTopping or ... or VegetableTopping) $\equiv$ Pizza
+ and (hasTopping only VegetarianTopping) \textbf{since:} VegetarianTopping $\equiv$ PizzaTopping
+ and (CheeseTopping or ... or VegetableTopping) \\ \hline
+
+VegetarianPizzaEquiv1 & VegetarianPizza & Pizza
+ and (hasTopping only VegetarianTopping) $\equiv$ Pizza
+ and (not (hasTopping some FishTopping))
+ and (not (hasTopping some MeatTopping)) \textbf{since:}  There are only vegetarian toppings left when stating: "not Fish and not Meat" \\ \hline
+ 
+SpicyPizzaEquivalent & SpicyPizza &  Pizza
+ and (hasTopping some 
+    (PizzaTopping
+     and (hasSpiciness some Hot))) $\equiv$ Pizza
+ and (hasTopping some SpicyTopping), \textbf{since:} SpicyTopping $\equiv$ PizzaTopping
+ and (hasSpiciness some Hot)\\ \hline
+ Property of subclasses TomatoTopping & TomatoTopping & The property hasSpiciness some Mild is redefined in the subclasses of TomatoTopping, which is redundant as it already defined in the TomatoTopping class. \\ \hline
+\end{tabular}
+\end{center}
+
+\begin{problem}{3}
+Introduce redundancies in redundant-pizza.owl.
+\end{problem}
+\begin{center}
+\begin{tabular}{ | p{4cm} | p{4cm} | p{8cm} | }
+Redundancy type & Location & Explanation \\ \hline
+
+Inheritance & HotGreenPepper- Topping & Example of a redundancy with its explanation at a deep level. This clearly illustrates why redundancies where becoming more scarse as the depth of the class hierarchy increased (as described in the Intra-Axiom Redundancy paper). \\ \hline
+
+Cardinality \& inheritance & NotBoringPizza & An example of redundancy in cardinality, as well as subclass inheritance. We have stated that this is a child of the Pizza class, however this will already be inferred by the reasoner since we have the equivalence: 
+Pizza and (not (hasTopping max 3 owl:Thing)). Furthermore, cardinality redundancy: not(hasTopping max 2 owl:Thing) is equivalent to: hasTopping min 3 owl:Thing \\ \hline
+\end{tabular}
+\end{center}
+
+
+
+\end{document}
